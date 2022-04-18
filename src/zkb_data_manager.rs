@@ -8,6 +8,7 @@ use rusqlite::{named_params, Connection, Transaction};
 use lib::{CmdEvent, DataEvent, Killmail, IdHash};
 
 use chrono::{NaiveDate, NaiveDateTime};
+use std::collections::VecDeque;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(about, version, author)]
@@ -47,10 +48,9 @@ struct Config {
     #[clap(
         short,
         long,
-        default_value_t = String::from("2022-01-01"),
-        help = "Enable update mode up to YYYY-MM-DD"
+        help = "Specifies lower bound for update. Will receive all killmails (YYYY-MM-DD, ...)"
     )]
-    update_date: String,
+    lower_bound: String,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -61,9 +61,9 @@ fn main() -> anyhow::Result<()> {
     let (mut client, mut eventloop) = Client::new(options, 100);
     client.subscribe(config.data_topic.clone(), QoS::AtMostOnce)?;
 
-    let up_to_date = NaiveDate::parse_from_str(&config.update_date, "%Y-%m-%d")?.and_hms(0,0,0);
+    let up_to_date = NaiveDate::parse_from_str(&config.lower_bound, "%Y-%m-%d")?.and_hms(0,0,0);
 
-    let next: Vec<u8> = bincode::serialize(&CmdEvent::RequestLastHashes(8))?;
+    let next: Vec<u8> = bincode::serialize(&CmdEvent::RequestLastHashes(5))?;
     client.publish(config.cmd_topic.clone(), QoS::AtLeastOnce, false, next.clone())?;
 
     let rt = tokio::runtime::Runtime::new()?;
@@ -82,10 +82,15 @@ fn main() -> anyhow::Result<()> {
                             let transaction = conn.transaction()?;
                             let ids = fetch_and_insert(killmails, &transaction)?;
                             transaction.commit().map_err(|e| anyhow!(format!("{}", e)))?;
-
+                            println!("The {} killmails updated: {:?}", ids.len(), ids);
                             let upd: Vec<u8> = bincode::serialize(&CmdEvent::MarkComplete(ids))?;
+
                             client.publish(config.cmd_topic.clone(), QoS::AtLeastOnce, false, upd.clone())?;
                             client.publish(config.cmd_topic.clone(), QoS::AtLeastOnce, false, next.clone())?;
+                        } else {
+                            println!("All killmails up to {} received", up_to_date.timestamp());
+                            println!("Consider to decrease the `lower_bound` or update hashes");
+                            return Ok(());
                         }
                     },
                     DataEvent::KillmailToStore(killmail) => {
@@ -117,21 +122,29 @@ fn acceptable(killmails: &Vec<Killmail>, up_to_date: &NaiveDateTime)->bool {
                 println!("{:?} < {:?}", up_to_date, date);
                 return true;
             }
+        } else {
+            println!("{:?}", killmail);
+            panic!("Abort! Cant parse killmail date");
         }
     }
+
     return false;
 }
 
 async fn async_pre_fetch_killmails(hashes: Vec<IdHash>) -> anyhow::Result<Vec<Killmail>> {
-    let mut tasks = Vec::new();
+    let mut tasks = VecDeque::new();
+    let mut killmails = Vec::new();
+
     for (id, hash) in hashes {
         let task = tokio::task::spawn(async_fetch_killmail(id, hash.clone()));
-        tasks.push(task);
+        tasks.push_back(task);
     }
 
-    let mut killmails = Vec::new();
+    println!("Enqueued {} download tasks", tasks.len());
+
     for task in tasks {
         let killmail = task.await??;
+        println!("Received {}", killmail.killmail_id);
         killmails.push(killmail);
     }
 
@@ -235,7 +248,7 @@ async fn async_fetch_killmail(id: i32, hash: String) -> anyhow::Result<Killmail>
             , response.text().await.unwrap_or_default()
             , timeout.as_secs());
         std::thread::sleep(timeout);
-        if timeout.as_secs() < 300 {
+        if timeout.as_secs() < 120 {
             timeout *= 2;
         }
         response = reqwest::get(&url).await?;
