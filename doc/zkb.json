@@ -1,0 +1,109 @@
+{
+    "attackers": [
+        {
+            "character_id": 2118289644,
+            "corporation_id": 98318424,
+            "damage_done": 853,
+            "final_blow": true,
+            "security_status": -10,
+            "ship_type_id": 17922,
+            "weapon_type_id": 6963
+        }
+    ],
+    "killmail_id": 98190688,
+    "killmail_time": "2022-01-17T16:57:53Z",
+    "solar_system_id": 30045314,
+    "victim": {
+        "character_id": 2118847117,
+        "corporation_id": 1000167,
+        "damage_taken": 853,
+        "items": [
+            {
+                "flag": 5,
+                "item_type_id": 30013,
+                "quantity_dropped": 8,
+                "singleton": 0
+            },
+            {
+                "flag": 20,
+                "item_type_id": 33180,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 22,
+                "item_type_id": 22177,
+                "quantity_dropped": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 23,
+                "item_type_id": 22175,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 12,
+                "item_type_id": 5599,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 11,
+                "item_type_id": 5599,
+                "quantity_dropped": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 92,
+                "item_type_id": 31213,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 27,
+                "item_type_id": 17938,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 93,
+                "item_type_id": 31213,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 21,
+                "item_type_id": 33180,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            },
+            {
+                "flag": 19,
+                "item_type_id": 35658,
+                "quantity_destroyed": 1,
+                "singleton": 0
+            }
+        ],
+        "position": {
+            "x": 1719519917372.7568,
+            "y": 160063852029.24945,
+            "z": -270641615561.63876
+        },
+        "ship_type_id": 605
+    },
+    "zkb": {
+        "locationID": 50016271,
+        "hash": "9377f28e34eabc18162e57e7e85f7a15c9339604",
+        "fittedValue": 1327809.86,
+        "droppedValue": 160905.63,
+        "destroyedValue": 1241817.19,
+        "totalValue": 1402722.82,
+        "points": 1,
+        "npc": false,
+        "solo": true,
+        "awox": false,
+        "esi": "https:\/\/esi.evetech.net\/latest\/killmails\/98190688\/9377f28e34eabc18162e57e7e85f7a15c9339604\/",
+        "url": "https:\/\/zkillboard.com\/kill\/98190688\/"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "zkb.db",
+            "database": "${workspaceFolder:zkb_tools}/zkb.db"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "killmails.db",
+            "database": "${workspaceFolder:zkb_tools}/killmails.db"
+        }
+    ]
+}

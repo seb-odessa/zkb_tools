@@ -1,0 +1,102 @@
+
+CREATE TABLE IF NOT EXISTS hashes(
+    id INTEGER PRIMARY KEY NOT NULL,
+    hash BLOB NOT NULL
+);
+////////////////////////////////////////////////////////////////////////////////////
+        PRAGMA foreign_keys = ON;
+
+        CREATE TABLE IF NOT EXISTS killmails(
+            killmail_id INTEGER NOT NULL PRIMARY KEY,
+            killmail_time TEXT NOT NULL,
+            solar_system_id INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS killmail_time_idx ON killmails(killmail_time);
+
+        CREATE TABLE IF NOT EXISTS participants(
+            killmail_id INTEGER NOT NULL,
+            character_id INTEGER,
+            corporation_id INTEGER,
+            alliance_id INTEGER,
+            ship_type_id INTEGER,
+            damage INTEGER NOT NULL,
+            is_victim INTEGER NOT NULL,
+            UNIQUE(killmail_id, character_id, is_victim),
+            FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
+        );
+        CREATE INDEX IF NOT EXISTS participant_idx ON participants(character_id, corporation_id, alliance_id);
+////////////////////////////////////////////////////////////////////////////////////
+
+NOTE: The statistic and graphs have to be based on kill/losses history on last [30/60/90] days
+
+Character: 	     Seb Odessa
+Corporation:     SO Corporation [SO C]
+Alliance: 	     Power Unit Command <P.U.C>
+Kills:           Some graph (60 days)
+Losses:          Some graph (60 days)
+Probable Ship:   Loki (60%), Tengu (20%)         // Most probably ship
+Activity System: Gelfiven (50%), Arifsdald (45%) // System with the most activity
+Friendly Characters:    Alexandr Zaitcev (40%), Smock Dog (32%)
+Friendly Corporations:  Techno Hive (30%),  Deep Core Mining Inc.(10%)
+Friendly Alliances:     Valkyrie Alliance (60%), Nanofiber Bolts (20%)
+
+
+wss://zkillboard.com/websocket/
+{"action":"sub","channel":"killstream"}
+
+
+// Total wins/losses
+SELECT count(p.killmail_id)
+FROM participants p JOIN killmails k ON p.killmail_id = k.killmail_id
+WHERE character_id = 2112698901
+	AND killmail_time > "2021-10-01T00:00:00Z"
+	AND killmail_time < "2021-12-01T00:00:00Z"
+	AND is_victim = 0/1
+
+// Grouped by date wins/losses
+SELECT date(killmail_time), count(p.killmail_id)
+FROM participants p JOIN killmails k ON p.killmail_id = k.killmail_id
+WHERE character_id = 2112698901
+	AND killmail_time > "2021-10-01T00:00:00Z"
+	AND killmail_time < "2021-12-01T00:00:00Z"
+	AND is_victim = 0/1
+GROUP BY 1
+
+
+SELECT character_id, count(character_id)
+FROM participants p
+WHERE p.killmail_id IN (
+    SELECT p.killmail_id
+	FROM participants p JOIN killmails k ON p.killmail_id = k.killmail_id
+    WHERE character_id = 2112698901
+	AND killmail_time > "2021-10-01T00:00:00Z"
+	AND killmail_time < "2021-12-01T00:00:00Z"
+	AND is_victim = 0
+)
+AND character_id <> 2112698901
+GROUP BY 1
+ORDER BY 2 DESC
+
+
+SELECT ship_type_id, count(ship_type_id)
+fROM participants p JOIN killmails k ON p.killmail_id = k.killmail_id
+WHERE character_id = 2112698901
+	AND killmail_time > "2021-10-01T00:00:00Z"
+	AND killmail_time < "2021-12-01T00:00:00Z"
+	AND ship_type_id IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC
+
+SELECT corporation_id, count(corporation_id)
+FROM participants p
+WHERE p.killmail_id IN (
+    SELECT p.killmail_id
+	FROM participants p JOIN killmails k ON p.killmail_id = k.killmail_id
+    WHERE character_id = 2112698901
+	AND killmail_time > "2021-10-01T00:00:00Z"
+	AND killmail_time < "2021-12-01T00:00:00Z"
+	AND is_victim = 0
+)
+AND corporation_id <> 98676166
+GROUP BY 1
+ORDER BY 2 DESC
